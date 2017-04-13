@@ -68,12 +68,13 @@ class RedditAPI {
             SELECT posts.id, posts.subredditId, posts.title, posts.url, posts.userId, posts.createdAt, posts.updatedAt, 
             users.username, users.createdAt AS userCreatedAt, users.updatedAt AS userUpdatedAt, 
             subreddits.id AS subredditId, subreddits.name AS subredditName, subreddits.description AS subredditDescription, 
-            subreddits.createdAt AS subredditCreatedAt, subreddits.updatedAt AS subredditUpdatedAt
+            subreddits.createdAt AS subredditCreatedAt, subreddits.updatedAt AS subredditUpdatedAt, SUM(votes.voteDirection) as voteScore
             FROM posts 
             JOIN users ON posts.userId = users.id
             JOIN subreddits ON posts.subredditId = subreddits.id
-            JOIN votes ON posts.postID = postVotes
             ORDER BY posts.createdAt DESC
+            JOIN votes ON posts.id = votes.postId
+            ORDER BY voteScore DESC
             LIMIT 25`
         ).then(function(result) { 
             return result.map(function(item) { 
@@ -103,8 +104,8 @@ class RedditAPI {
     }
     
     createSubreddit(subreddit){
-        return this.conn.query(`'INSERT INTO subreddits (name,description, createdAt, updatedAt) 
-        VALUES (?, ?, NOW(), NOW())'`, 
+        return this.conn.query(`INSERT INTO subreddits (name,description, createdAt, updatedAt) 
+        VALUES (?, ?, NOW(), NOW())`, 
         [subreddit.name, subreddit.description])
         .then(result=> { 
             return subreddit.id;
@@ -133,5 +134,7 @@ class RedditAPI {
             throw new Error("BAD VOTE");
         }
     }
+    
 }
+
 module.exports = RedditAPI;

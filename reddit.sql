@@ -44,5 +44,5 @@ CREATE TABLE votes (
   KEY userId (userId), -- this is required for the foreign key
   KEY postId (postId), -- this is required for the foreign key
   CONSTRAINT validUserVote FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE, -- CASCADE means also delete the votes when a user is deleted
-  CONSTRAINT validPost FOREIGN KEY (postId) REFERENCES posts (id) ON DELETE CASCADE -- CASCADE means also delete the votes when a post is deleted
+  CONSTRAINT validPost FOREIGN KEY (postId) REFERENCES posts (id) ON DELETE CASCADE -- CASCADE means also delete the post when a vote is deleted
 );

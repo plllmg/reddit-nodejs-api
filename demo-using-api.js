@@ -30,6 +30,7 @@ var vote = {
 myReddit.createVote(vote).then(function(result){
     console.log('Worked!!!',result)
 })
+
 // myReddit.createPost(post).then(function(result) {
 //     console.log(result)
 // })
@@ -40,7 +41,6 @@ myReddit.createVote(vote).then(function(result){
 // myReddit.getAllSubreddits().then(function(result) {
 //     console.log(result)
 // })
-
 
 
 // We call this function to create a new user to test our API
