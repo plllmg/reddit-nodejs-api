@@ -55,11 +55,14 @@ class RedditAPI {
          */
         return this.conn.query(
             `
-            SELECT id, title, url, userId, createdAt, updatedAt
+            SELECT posts.id, posts.title, posts.url, posts.userId, posts.createdAt, posts.updatedAt, users.id, users.username, users.createdAt, users.updatedAt
             FROM posts
-            ORDER BY createdAt DESC
+            JOIN users ON posts.userId = users.id
+            ORDER BY posts.createdAt DESC
             LIMIT 25`
-        );
+        ).map(array => {
+            
+        });
     }
 }
 
