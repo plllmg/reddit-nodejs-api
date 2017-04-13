@@ -22,16 +22,24 @@ var post = {
     url: 'testURLPlzIgnore.com',
     subredditId: 1
 };
-myReddit.createPost(post).then(function(result) {
-    console.log(result)
+var vote = {
+    userId: 1,
+    postId: 2,
+    voteDirection: 4
+}
+myReddit.createVote(vote).then(function(result){
+    console.log('Worked!!!',result)
 })
-myReddit.getAllPosts().then(function(result) {
-    console.log(result)
-})
+// myReddit.createPost(post).then(function(result) {
+//     console.log(result)
+// })
+// myReddit.getAllPosts().then(function(result) {
+//     console.log(result)
+// })
 
-myReddit.getAllSubreddits().then(function(result) {
-    console.log(result)
-})
+// myReddit.getAllSubreddits().then(function(result) {
+//     console.log(result)
+// })
 
 
 

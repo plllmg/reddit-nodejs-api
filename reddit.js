@@ -59,9 +59,10 @@ class RedditAPI {
         therefore template strings make it very easy to write SQL queries that span multiple
         lines without having to manually split the string line by line.
          */
-    //   In the reddit.js API, modify the getAllPosts function to return the full subreddit associated with each post. 
-    //   You will have to do an extra JOIN to accomplish this.   
-         
+// Now that we have voting, we need to add the voteScore of each post by doing an extra JOIN to the votes table, 
+//grouping by postId, and doing a SUM on the voteDirection column.
+// To make the output more interesting, we need to ORDER the posts by the highest voteScore first instead of creation time.
+
         return this.conn.query(
             `
             SELECT posts.id, posts.subredditId, posts.title, posts.url, posts.userId, posts.createdAt, posts.updatedAt, 
@@ -71,6 +72,7 @@ class RedditAPI {
             FROM posts 
             JOIN users ON posts.userId = users.id
             JOIN subreddits ON posts.subredditId = subreddits.id
+            JOIN votes ON posts.postID = postVotes
             ORDER BY posts.createdAt DESC
             LIMIT 25`
         ).then(function(result) { 
@@ -120,6 +122,16 @@ class RedditAPI {
     getAllSubreddits(){
         return this.conn.query('SELECT * FROM subreddits ORDER BY createdAt DESC');
     
+    }
+    
+    createVote(vote){
+        if (vote.voteDirection === -1 || vote.voteDirection === 0 || vote.voteDirection === 1 ){
+            return this.conn.query( 'INSERT INTO votes SET postId=?, userId=?, voteDirection=? ON DUPLICATE KEY UPDATE voteDirection=?', [vote.postId, vote.userId, vote.voteDirection, vote.voteDirection])
+            .catch(console.log)
+        }
+        else {
+            throw new Error("BAD VOTE");
+        }
     }
 }
 module.exports = RedditAPI;
