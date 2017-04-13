@@ -16,10 +16,23 @@ var connection = mysql.createPool({
 var RedditAPI = require('./reddit');
 
 var myReddit = new RedditAPI(connection);
-
+var post = {
+    userId: 1, 
+    title: 'testTitlePlzIgnore',
+    url: 'testURLPlzIgnore.com',
+    subredditId: 1
+};
+myReddit.createPost(post).then(function(result) {
+    console.log(result)
+})
 myReddit.getAllPosts().then(function(result) {
     console.log(result)
 })
+
+myReddit.getAllSubreddits().then(function(result) {
+    console.log(result)
+})
+
 
 
 // We call this function to create a new user to test our API

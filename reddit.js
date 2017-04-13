@@ -34,15 +34,19 @@ class RedditAPI {
     }
 
     createPost(post) {
-        return this.conn.query(
-            `
-            INSERT INTO posts (userId, title, url, createdAt, updatedAt)
-            VALUES (?, ?, ?, NOW(). NOW())`,
-            [post.userId, post.title, post.url]
-        )
+        return this.conn.query('INSERT INTO posts (userId, title, url, createdAt, updatedAt, subredditId) VALUES (?, ?, ?, NOW(), NOW(), ?)', [post.userId, post.title, post.url, post.subredditId])
             .then(result => {
-                return result.insertId;
-            });
+                return result.subredditId;
+            })
+             .catch(error => {
+                // Special error handling for no subreddit ID
+                if (error.code === 'ER_NO_SRID') {
+                    throw new Error('This Subreddit does not exist');
+                }
+                else {
+                    throw error;
+                }
+                });
     }
 
     getAllPosts(callback) {
@@ -55,14 +59,18 @@ class RedditAPI {
         therefore template strings make it very easy to write SQL queries that span multiple
         lines without having to manually split the string line by line.
          */
-         
+    //   In the reddit.js API, modify the getAllPosts function to return the full subreddit associated with each post. 
+    //   You will have to do an extra JOIN to accomplish this.   
          
         return this.conn.query(
             `
-            SELECT posts.id, posts.title, posts.url, posts.userId, posts.createdAt, posts.updatedAt, 
-            users.username, users.createdAt AS userCreatedAt, users.updatedAt AS userUpdatedAt
+            SELECT posts.id, posts.subredditId, posts.title, posts.url, posts.userId, posts.createdAt, posts.updatedAt, 
+            users.username, users.createdAt AS userCreatedAt, users.updatedAt AS userUpdatedAt, 
+            subreddits.id AS subredditId, subreddits.name AS subredditName, subreddits.description AS subredditDescription, 
+            subreddits.createdAt AS subredditCreatedAt, subreddits.updatedAt AS subredditUpdatedAt
             FROM posts 
             JOIN users ON posts.userId = users.id
+            JOIN subreddits ON posts.subredditId = subreddits.id
             ORDER BY posts.createdAt DESC
             LIMIT 25`
         ).then(function(result) { 
@@ -79,6 +87,13 @@ class RedditAPI {
                       username: item.username,
                       createdAt:item.userCreatedAt,
                       updatedAt:item.userUpdatedAt
+                  },
+                  subreddit: {
+                      id: item.subredditId,
+                      name: item.subredditName,
+                      description: item.subredditDescription,
+                      createdAt: item.subredditCreatedAt,
+                      updatedAt: item.subredditUpdatedAt
                   }
               }
             })
@@ -86,7 +101,7 @@ class RedditAPI {
     }
     
     createSubreddit(subreddit){
-        return this.conn.query(`'INSERT INTO subreddit (name,description, createdAt, updatedAt) 
+        return this.conn.query(`'INSERT INTO subreddits (name,description, createdAt, updatedAt) 
         VALUES (?, ?, NOW(), NOW())'`, 
         [subreddit.name, subreddit.description])
         .then(result=> { 
@@ -95,12 +110,16 @@ class RedditAPI {
         .catch(error => {
         // Special error handling for duplicate entry
             if (error.code === 'ER_DUP_ENTRY') {
-                    throw new Error('This subbreddit already exists');
+                    throw new Error('This subreddit already exists');
             }
             else {
                 throw error;
             }
         });
+    }
+    getAllSubreddits(){
+        return this.conn.query('SELECT * FROM subreddits ORDER BY createdAt DESC');
+    
     }
 }
 module.exports = RedditAPI;
