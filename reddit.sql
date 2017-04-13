@@ -1,3 +1,4 @@
+
 -- This creates the users table. The username field is constrained to unique
 -- values only, by using a UNIQUE KEY on that column
 CREATE TABLE users (
@@ -16,8 +17,19 @@ CREATE TABLE posts (
   title VARCHAR(300) DEFAULT NULL,
   url VARCHAR(2000) DEFAULT NULL,
   userId INT DEFAULT NULL,
+  subredditId INT DEFAULT NULL,
   createdAt DATETIME NOT NULL,
   updatedAt DATETIME NOT NULL,
   KEY userId (userId), -- why did we add this here? ask me :)
   CONSTRAINT validUser FOREIGN KEY (userId) REFERENCES users (id) ON DELETE SET NULL
+);
+
+-- Create a subreddit table
+CREATE TABLE subreddits(
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(30) NOT NULL,
+  description VARCHAR(200) DEFAULT NULL,
+  createdAt DATETIME NOT NULL,
+  updatedAt DATETIME NOT NULL,
+  UNIQUE INDEX name (name) 
 );

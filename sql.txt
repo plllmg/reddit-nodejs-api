@@ -3,3 +3,5 @@ VALUES            ('hello4', 'test4.com', NOW(), NOW());
 INSERT INTO users (username, password, createdAt, updatedAt)
 VALUES            ('user4', 'pword4', NOW(), NOW());
 UPDATE posts SET userId='2';
+
+ALTER TABLE posts ADD COLUMN subredditId;

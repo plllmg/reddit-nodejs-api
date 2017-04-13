@@ -56,6 +56,7 @@ class RedditAPI {
         lines without having to manually split the string line by line.
          */
          
+         
         return this.conn.query(
             `
             SELECT posts.id, posts.title, posts.url, posts.userId, posts.createdAt, posts.updatedAt, 
@@ -64,8 +65,8 @@ class RedditAPI {
             JOIN users ON posts.userId = users.id
             ORDER BY posts.createdAt DESC
             LIMIT 25`
-        ).then(function(result) {
-            return result.map(function(item) {
+        ).then(function(result) { 
+            return result.map(function(item) { 
               return {
                   id: item.id,
                   title:item.title,
@@ -82,6 +83,24 @@ class RedditAPI {
               }
             })
         })
+    }
+    
+    createSubreddit(subreddit){
+        return this.conn.query(`'INSERT INTO subreddit (name,description, createdAt, updatedAt) 
+        VALUES (?, ?, NOW(), NOW())'`, 
+        [subreddit.name, subreddit.description])
+        .then(result=> { 
+            return subreddit.id;
+        })
+        .catch(error => {
+        // Special error handling for duplicate entry
+            if (error.code === 'ER_DUP_ENTRY') {
+                    throw new Error('This subbreddit already exists');
+            }
+            else {
+                throw error;
+            }
+        });
     }
 }
 module.exports = RedditAPI;
