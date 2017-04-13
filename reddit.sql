@@ -33,3 +33,16 @@ CREATE TABLE subreddits(
   updatedAt DATETIME NOT NULL,
   UNIQUE INDEX name (name) 
 );
+-- 
+CREATE TABLE votes (
+  userId INT,
+  postId INT,
+  voteDirection TINYINT,
+  createdAt DATETIME NOT NULL,
+  updatedAt DATETIME NOT NULL,
+  PRIMARY KEY (userId, postId), -- this is called a composite key because it spans multiple columns. the combination userId/postId must be unique and uniquely identifies each row of this table.
+  KEY userId (userId), -- this is required for the foreign key
+  KEY postId (postId), -- this is required for the foreign key
+  CONSTRAINT validUserVote FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE, -- CASCADE means also delete the votes when a user is deleted
+  CONSTRAINT validPost FOREIGN KEY (postId) REFERENCES posts (id) ON DELETE CASCADE -- CASCADE means also delete the votes when a post is deleted
+);
