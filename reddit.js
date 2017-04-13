@@ -1,3 +1,5 @@
+'use strict'
+
 var bcrypt = require('bcrypt-as-promised');
 var HASH_ROUNDS = 10;
 
@@ -53,17 +55,33 @@ class RedditAPI {
         therefore template strings make it very easy to write SQL queries that span multiple
         lines without having to manually split the string line by line.
          */
+         
         return this.conn.query(
             `
-            SELECT posts.id, posts.title, posts.url, posts.userId, posts.createdAt, posts.updatedAt, users.id, users.username, users.createdAt, users.updatedAt
-            FROM posts
+            SELECT posts.id, posts.title, posts.url, posts.userId, posts.createdAt, posts.updatedAt, 
+            users.username, users.createdAt AS userCreatedAt, users.updatedAt AS userUpdatedAt
+            FROM posts 
             JOIN users ON posts.userId = users.id
             ORDER BY posts.createdAt DESC
             LIMIT 25`
-        ).map(array => {
-            
-        });
+        ).then(function(result) {
+            return result.map(function(item) {
+              return {
+                  id: item.id,
+                  title:item.title,
+                  url:item.url,
+                  createdAt:item.createdAt,
+                  updatedAt:item.updatedAt,
+                  userId:item.userId,
+                  user: {
+                      id: item.userId,
+                      username: item.username,
+                      createdAt:item.userCreatedAt,
+                      updatedAt:item.userUpdatedAt
+                  }
+              }
+            })
+        })
     }
 }
-
 module.exports = RedditAPI;
