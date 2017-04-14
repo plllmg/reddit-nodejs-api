@@ -46,3 +46,16 @@ CREATE TABLE votes (
   CONSTRAINT validUserVote FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE, -- CASCADE means also delete the votes when a user is deleted
   CONSTRAINT validPost FOREIGN KEY (postId) REFERENCES posts (id) ON DELETE CASCADE -- CASCADE means also delete the post when a vote is deleted
 );
+
+CREATE TABLE comments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  userId INT,
+  postId INT,
+  parentId INT,
+  createdAt DATETIME,
+  updatedAt DATETIME,
+  text VARCHAR(10000),
+  CONSTRAINT validCommentUser FOREIGN KEY (userId) REFERENCES users (id) ON DELETE SET NULL,
+  CONSTRAINT validCommentPost FOREIGN KEY (userId) REFERENCES posts (id) ON DELETE SET NULL,
+  CONSTRAINT validComment FOREIGN KEY (parentId) REFERENCES comments (id)
+);

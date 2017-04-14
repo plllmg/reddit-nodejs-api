@@ -135,6 +135,29 @@ class RedditAPI {
         }
     }
     
+    //In the reddit.js API, add a createComment(comment) function. It should take a comment object which contains a text, userId, postId and 
+    // optional parentId. It should insert the new comment, and either return an error or the ID of the new comment. 
+    // If parentId is not defined, it should be set to NULL. You can take some inspiration from the createPost function which operates in a similar way.
+    
+    
+
+    createComment(comment){
+        if(!comment.parentId) { comment.parentId = null; }
+        return this.conn.query('INSERT INTO comment (text, userId, postId, parentId) VALUES (?, ?, ?, ?)', 
+        [comment.text, comment.userId, comment.postId, comment.parentId])
+        .then(result =>{
+            return result.postId;
+        }).catch(error => {
+                // Special error handling return error
+                if (error.code === 'ERROR') {
+                    throw new Error('OOPS');
+                }
+                else {
+                    throw error;
+                }
+            });
+    }
+    
 }
 
 module.exports = RedditAPI;
