@@ -2,8 +2,6 @@ var request = require('request-promise');
 var mysql = require('promise-mysql');
 var RedditAPI = require('./reddit');
 
-
-
 crawl()
 
 function getSubreddits() {
@@ -22,7 +20,7 @@ function getSubreddits() {
 
 function getPostsForSubreddit(subredditName) {
  
-    return request('https://www.reddit.com/r/'+subredditName+'.json?limit=50')
+    return request('https://www.reddit.com/r/'+subredditName+'/.json?limit=50')
         .then(
             response => {
                 // Parse the response as JSON and store in variable called result
@@ -42,6 +40,33 @@ function getPostsForSubreddit(subredditName) {
             }
         );
 }
+function getComments() {
+    return request('https://www.reddit.com/r/StarWars/comments/65dbgt/the_last_jedi_teaser_poster/.json')
+        .then(response => {
+            // Parse response as JSON and store in variable called result
+            var comments = [];
+                comments[i].id = response.subString(indexOf('\"id\": \"'), 7)
+        
+           // Use .map to return a list of comments (strings) only
+            return result[1].data.children.map(names =>{
+                
+                return names.data.getComments;
+                
+            })
+        });
+}
+
+// function getCommentsForPost(postId) {
+    
+//     return request('https://www.reddit.com/r/'+subredditName+'/comments.jsonlimit=50?')
+//         then(
+//             response => {
+//                 var result = JSON.parse(response);
+//                 return result.data.children.data
+                
+//             }
+//             )
+// }
 
 function crawl() {
     // create a connection to the DB
@@ -50,7 +75,7 @@ function crawl() {
         user     : 'root', // CHANGE THIS :)
         password : '',
         database: 'reddit',
-        connectionLimit: 10
+        connectionLimit: 1
     });
 
     // create a RedditAPI object. we will use it to insert new data
@@ -81,7 +106,6 @@ function crawl() {
                     .then(subredditId => {
                         subId = subredditId;
                         return getPostsForSubreddit(subredditName)
-                    })
                     .then(posts => {
                         posts.forEach(post => {
                             var userIdPromise;
@@ -111,4 +135,5 @@ function crawl() {
                     });
             });
         });
+    });
 }

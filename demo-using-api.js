@@ -23,24 +23,28 @@ var post = {
     subredditId: 1
 };
 // var vote = {
-//     userId: 1,
-//     postId: 2,
-//     voteDirection: 4
+    // userId: 1,
+    // postId: 2,
+    // voteDirection: 4
 // }
 // myReddit.createVote(vote).then(function(result){
-//     console.log('Worked!!!',result)
+    // console.log('Worked!!!',result)
 // })
 
 myReddit.createPost(post).then(function(result) {
      console.log(result)
 })
-// myReddit.getAllPosts().then(function(result) {
-//     console.log(result)
-// })
+myReddit.getAllPosts().then(function(result) {
+    console.log(result)
+})
 
-// myReddit.getAllSubreddits().then(function(result) {
-//     console.log(result)
-// })
+myReddit.getAllSubreddits().then(function(result) {
+    console.log(result)
+})
+
+myReddit.getCommentsForPost(1, 2).then(function(result) {
+    console.log(result)
+})
 
 
 // We call this function to create a new user to test our API

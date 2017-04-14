@@ -10,10 +10,7 @@ class RedditAPI {
 
     createUser(user) {
         /*
-        first we have to hash the password. we will learn about hashing next week.
-        the goal of hashing is to store a digested version of the password from which
-        it is infeasible to recover the original password, but which can still be used
-        to assess with great confidence whether a provided password is the correct one or not
+        first we have to hash the password.
          */
         return bcrypt.hash(user.password, HASH_ROUNDS)
             .then(hashedPassword => {
@@ -50,48 +47,38 @@ class RedditAPI {
     }
 
     getAllPosts(callback) {
-        /*
-        strings delimited with ` are an ES2015 feature called "template strings".
-        they are more powerful than what we are using them for here. one feature of
-        template strings is that you can write them on multiple lines. if you try to
-        skip a line in a single- or double-quoted string, you would get a syntax error.
-
-        therefore template strings make it very easy to write SQL queries that span multiple
-        lines without having to manually split the string line by line.
-         */
-// Now that we have voting, we need to add the voteScore of each post by doing an extra JOIN to the votes table, 
-//grouping by postId, and doing a SUM on the voteDirection column.
-// To make the output more interesting, we need to ORDER the posts by the highest voteScore first instead of creation time.
+ 
 
         return this.conn.query(
             `
-            SELECT posts.id, posts.subredditId, posts.title, posts.url, posts.userId, posts.createdAt, posts.updatedAt, 
-            users.username, users.createdAt AS userCreatedAt, users.updatedAt AS userUpdatedAt, 
-            subreddits.id AS subredditId, subreddits.name AS subredditName, subreddits.description AS subredditDescription, 
-            subreddits.createdAt AS subredditCreatedAt, subreddits.updatedAt AS subredditUpdatedAt, SUM(votes.voteDirection) as voteScore
+            SELECT 
+                posts.id, posts.subredditId, posts.title, posts.url, posts.userId, posts.createdAt, posts.updatedAt, 
+                users.username, users.createdAt AS userCreatedAt, users.updatedAt AS userUpdatedAt, 
+                subreddits.id AS subredditId, subreddits.name AS subredditName, subreddits.description AS subredditDescription, 
+                subreddits.createdAt AS subredditCreatedAt, subreddits.updatedAt AS subredditUpdatedAt, 
+                SUM(votes.voteDirection) as voteScore
             FROM posts 
             JOIN users ON posts.userId = users.id
             JOIN subreddits ON posts.subredditId = subreddits.id
-            ORDER BY posts.createdAt DESC
-            JOIN votes ON posts.id = votes.postId
-            ORDER BY voteScore DESC
+            LEFT JOIN votes ON posts.id = votes.postId
+            ORDER BY voteScore, posts.createdAt DESC
             LIMIT 25`
         ).then(function(result) { 
             return result.map(function(item) { 
-              return {
+              return { 
                   id: item.id,
                   title:item.title,
                   url:item.url,
                   createdAt:item.createdAt,
                   updatedAt:item.updatedAt,
                   userId:item.userId,
-                  user: {
+                  user: { //nested user object
                       id: item.userId,
                       username: item.username,
                       createdAt:item.userCreatedAt,
                       updatedAt:item.userUpdatedAt
                   },
-                  subreddit: {
+                  subreddit: { //nested subreddit object
                       id: item.subredditId,
                       name: item.subredditName,
                       description: item.subredditDescription,
@@ -104,7 +91,7 @@ class RedditAPI {
     }
     
     createSubreddit(subreddit){
-        return this.conn.query(`INSERT INTO subreddits (name,description, createdAt, updatedAt) 
+        return this.conn.query(`INSERT INTO subreddits (name, description, createdAt, updatedAt) 
         VALUES (?, ?, NOW(), NOW())`, 
         [subreddit.name, subreddit.description])
         .then(result=> { 
@@ -143,7 +130,7 @@ class RedditAPI {
 
     createComment(comment){
         if(!comment.parentId) { comment.parentId = null; }
-        return this.conn.query('INSERT INTO comment (text, userId, postId, parentId) VALUES (?, ?, ?, ?)', 
+        return this.conn.query('INSERT INTO comments (text, userId, postId, parentId) VALUES (?, ?, ?, ?)', 
         [comment.text, comment.userId, comment.postId, comment.parentId])
         .then(result =>{
             return result.postId;
@@ -158,6 +145,52 @@ class RedditAPI {
             });
     }
     
+    getCommentsForPost(postId, levels){
+        return this.conn.query(
+                `SELECT * FROM comments WHERE postId = ? AND parentId IS NULL LIMIT 25` [postId]
+                ).then(result =>{
+
+                    return this.getNextLevelComments(result, levels-1)
+                
+        
+            });
+   }
+    
+    getNextLevelComments(result, levels){
+        
+        if (levels === 0){
+            return result;
+        }
+        
+        var parentIdString = '';
+        
+        for (var i = 0; i < result.length; i++){
+            parentIdString = parentIdString + ' parentId = ' + result[i].id + ' OR';
+        }
+        parentIdString = parentIdString.substring(0, parentIdString.length - 3);
+        
+        return this.conn.query(
+            `SELECT * FROM comments WHERE postId = ? AND` + parentIdString + ` LIMIT 25` [result.postId]
+            ).then(nextresult =>{
+                if(nextresult){
+                    for (var i = 0; i < result.length; i++){
+                        var k = 0;
+                        
+                        for (var j = 0; j < nextresult.length; j++){
+                            if (result[i].id === nextresult[j].parentId){
+                                result[i].replies[k] = nextresult[j];
+                                k++;
+                            }
+                        
+                        }
+                    }
+                    return getNextLevelComments(nextresult, levels - 1);
+                        } else {
+                             return result;
+                        }
+                
+            });
+    }
 }
 
 module.exports = RedditAPI;
